@@ -8,15 +8,15 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.github.woostju.ssh.SshClientConfig;
-import com.github.woostju.ssh.SshClientFactory;
-import com.github.woostju.ssh.SshResponse;
-import com.github.woostju.ssh.exception.AuthException;
-import com.github.woostju.ssh.exception.SshException;
-import com.github.woostju.ssh.exception.TimeoutException;
+import com.github.woostju.ansible.SshClientConfig;
+import com.github.woostju.ansible.SshClientFactory;
+import com.github.woostju.ansible.SshResponse;
+import com.github.woostju.ansible.exception.AuthException;
+import com.github.woostju.ansible.exception.SshException;
+import com.github.woostju.ansible.exception.TimeoutException;
 
 
-public class TestSshClient {
+public class TestAnsibleClient {
 	
 	private SshClientConfig clientConfig;
 	
