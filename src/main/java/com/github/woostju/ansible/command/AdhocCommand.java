@@ -1,6 +1,5 @@
 package com.github.woostju.ansible.command;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,21 +57,6 @@ public abstract class AdhocCommand{
 			}
 		}
 		return returnValues;
-	}
-	
-	public String toString() {
-		List<String> commands = new ArrayList<String>();
-		commands.add(this.hosts.stream().collect(Collectors.joining(":")));
-		if (module != Module.playbook) {
-			commands.add("-m "+module.toString());
-		}
-		if (null!= module_args && module_args.size()>0) {
-			commands.add("-a '"+module_args.stream().collect(Collectors.joining(" "))+"'");
-		}
-		if (null!= module_args && module_args.size()>0) {
-			commands.add(options.stream().collect(Collectors.joining(" ")));
-		}
-		return commands.stream().collect(Collectors.joining(" "));
 	}
 	
 	public AdhocCommand(List<String> hosts, Module module, List<String> module_args, List<String> options){

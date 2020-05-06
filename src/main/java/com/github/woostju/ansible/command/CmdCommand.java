@@ -6,9 +6,14 @@ import org.assertj.core.util.Lists;
 
 import com.github.woostju.ansible.Module;
 
-public class CmdModuleCommand extends AdhocCommand{
+public class CmdCommand extends AdhocCommand{
 
-	public CmdModuleCommand(List<String> hosts, String command, List<String> options) {
+	
+	public CmdCommand(List<String> hosts, String command) {
+		this(hosts, command, null);
+	}
+	
+	public CmdCommand(List<String> hosts, String command, List<String> options) {
 		super(hosts, Module.command, Lists.newArrayList(command), options);
 	}
 }
