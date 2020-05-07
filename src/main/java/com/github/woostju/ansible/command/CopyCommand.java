@@ -6,12 +6,10 @@ import org.assertj.core.util.Lists;
 
 import com.github.woostju.ansible.Module;
 
-public class CopyCommand extends AdhocCommand{
+public class CopyCommand extends Command{
 
 	public CopyCommand(List<String> hosts, List<String> module_args, List<String> options) {
-		super(hosts, Module.copy, 
-				module_args,
-				options);
+		super(hosts, Module.copy.toString(),  module_args, options);
 	}
 	
 	

@@ -1,26 +1,51 @@
 package com.github.woostju.ansible.command;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.github.woostju.ansible.Module;
+import com.github.woostju.ansible.AnsibleClient;
 import com.github.woostju.ansible.ReturnValue;
 import com.github.woostju.ansible.util.JsonUtil;
 
-public abstract class AdhocCommand{
+public abstract class Command{
 	private List<String> hosts;
 	private List<String> module_args;
-	private Module module;
+	private String module;
 	private List<String> options;
 	
-	public AdhocCommand() {
+	public Command() {
 		
 	}
 	
 	public String getExecutable() {
 		return "ansible";
+	}
+	
+	public List<String> createAnsibleCommands(AnsibleClient client, Command command) {
+		List<String> commands = new ArrayList<>();
+		commands.add(client.getAnsibleRootPath() + command.getExecutable());
+		if(client.getInventoryPath()!=null){
+			commands.add("-i");
+			commands.add(client.getInventoryPath());
+		}
+		commands.add(command.getHosts().stream().collect(Collectors.joining(":")));
+		if (command.getModule()!=null) {
+			commands.add("-m "+command.getModule().toString());
+		}
+		if (null!= command.getModule_args() && command.getModule_args().size()>0) {
+			if (client.getHostSshConfig()!=null) {
+				commands.add("-a '"+command.getModule_args().stream().collect(Collectors.joining(" "))+"'");
+			}else {
+				commands.add("-a "+command.getModule_args().stream().collect(Collectors.joining(" ")));
+			}
+		}
+		if (null!= command.getOptions() && command.getOptions().size()>0) {
+			commands.add(command.getOptions().stream().collect(Collectors.joining(" ")));
+		}
+		return commands;
 	}
 	
 	public Map<String, ReturnValue> parseCommandReturnValues(List<String> rawOutput){
@@ -59,7 +84,7 @@ public abstract class AdhocCommand{
 		return returnValues;
 	}
 	
-	public AdhocCommand(List<String> hosts, Module module, List<String> module_args, List<String> options){
+	public Command(List<String> hosts, String module, List<String> module_args, List<String> options){
 		this.hosts = hosts;
 		this.module = module;
 		this.module_args = module_args;
@@ -82,11 +107,11 @@ public abstract class AdhocCommand{
 		this.module_args = module_args;
 	}
 
-	public Module getModule() {
+	public String getModule() {
 		return module;
 	}
 
-	public void setModule(Module module) {
+	public void setModule(String module) {
 		this.module = module;
 	}
 
@@ -97,7 +122,8 @@ public abstract class AdhocCommand{
 	public void setOptions(List<String> options) {
 		this.options = options;
 	}
-
+	
+	
 	
 	
 }

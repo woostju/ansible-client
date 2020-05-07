@@ -83,12 +83,4 @@ public class SystemCommandExecutor {
 		}
 		return stdout;
 	}
-	public static void main(String[] args) {
-		try {
-			List<String> r = SystemCommandExecutor.newExecutor().executeCommand(Lists.newArrayList("/usr/local/bin/ansible","-i","/etc/ansible/hosts","127.0.0.1","-m command","-a echo '123'"), 100);
-			System.out.println(r);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 }

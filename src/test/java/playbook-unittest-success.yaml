@@ -1,0 +1,5 @@
+---
+- hosts: 172.31.31.82 172.31.31.81
+  tasks:
+  - name: copyfile
+    command: echo 'whatever'

@@ -6,11 +6,11 @@ import org.assertj.core.util.Lists;
 
 import com.github.woostju.ansible.Module;
 
-public class ScriptCommand extends AdhocCommand{
+public class ScriptCommand extends Command{
 
 	
 	public ScriptCommand(List<String> hosts, List<String> module_args, List<String> options) {
-		super(hosts, Module.script, module_args, options);
+		super(hosts, Module.script.toString(), module_args==null?Lists.newArrayList():module_args, options);
 	}
 	
 	public ScriptCommand(List<String> hosts, String scriptFilePath, String executablePath, List<String> options) {

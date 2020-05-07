@@ -1,22 +1,40 @@
 package com.github.woostju.ansible.command;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import org.assertj.core.util.Lists;
-
-import com.github.woostju.ansible.Module;
+import com.github.woostju.ansible.AnsibleClient;
 import com.github.woostju.ansible.ReturnValue;
 
-public class PlaybookCommand extends AdhocCommand{
+public class PlaybookCommand extends Command{
 
+	private String playbookPath;
+	
 	public PlaybookCommand(List<String> hosts, String playbookPath, List<String> options) {
-		super(Lists.newArrayList(playbookPath), Module.playbook, 
+		super(hosts, null, 
 				null, 
 				options);
+		this.playbookPath = playbookPath;
+	}
+	
+	@Override
+	public List<String> createAnsibleCommands(AnsibleClient client, Command command) {
+		List<String> commands = new ArrayList<>();
+		commands.add(client.getAnsibleRootPath() + command.getExecutable());
+		if(client.getInventoryPath()!=null){
+			commands.add("-i");
+			commands.add(client.getInventoryPath());
+		}
+		commands.add(this.playbookPath);
+		if (null!= command.getOptions() && command.getOptions().size()>0) {
+			commands.add(command.getOptions().stream().collect(Collectors.joining(" ")));
+		}
+		return commands;
 	}
 
 	@Override
@@ -52,30 +70,41 @@ public class PlaybookCommand extends AdhocCommand{
 					responses.get(ip).setStdout(rawOutput);
 					Matcher match =  failed_pattern.matcher(line);
 					if(match.find()){
-						if(Integer.valueOf(digital_pattern.matcher(line).group())>0) {
-							responses.get(ip).setResult(ReturnValue.Result.failed);
-							continue;
+						Matcher match2 = digital_pattern.matcher(match.group());
+						if(match2.find()) {
+							if (Integer.valueOf(match2.group())>0) {
+								responses.get(ip).setResult(ReturnValue.Result.failed);
+								continue;
+							}
 						}
 					}
 					match = unreachable_pattern.matcher(line);
 					if(match.find()){
-						if(Integer.valueOf(digital_pattern.matcher(line).group())>0) {
-							responses.get(ip).setResult(ReturnValue.Result.unreachable);
-							continue;
-						}
-					}
-					match = changed_pattern.matcher(line);
-					if(match.find()){
-						if(Integer.valueOf(digital_pattern.matcher(line).group())>0) {
-							responses.get(ip).setResult(ReturnValue.Result.changed);
-							continue;
+						Matcher match2 = digital_pattern.matcher(match.group());
+						if(match2.find()) {
+							if (Integer.valueOf(match2.group())>0) {
+								responses.get(ip).setResult(ReturnValue.Result.unreachable);
+								continue;
+							}
 						}
 					}
 					match = ok_pattern.matcher(line);
 					if(match.find()){
-						if(Integer.valueOf(digital_pattern.matcher(line).group())>0) {
-							responses.get(ip).setResult(ReturnValue.Result.success);
-							continue;
+						Matcher match2 = digital_pattern.matcher(match.group());
+						if(match2.find()) {
+							if (Integer.valueOf(match2.group())>0) {
+								responses.get(ip).setResult(ReturnValue.Result.success);
+								continue;
+							}
+						}
+					}
+					match = changed_pattern.matcher(line);
+					if(match.find()){
+						Matcher match2 = digital_pattern.matcher(match.group());
+						if(match2.find()) {
+							if (Integer.valueOf(match2.group())>0) {
+								responses.get(ip).setResult(ReturnValue.Result.changed);
+								continue;							}
 						}
 					}
 				}
@@ -101,36 +130,7 @@ public class PlaybookCommand extends AdhocCommand{
 				}
 			}
 		}
-		
 		return responses;
 	}
+	
 }
-/**
- * 
- * ansible-playbook -i ../inventory playbook.yml 执行结果样例： 
- [WARNING]: Could not match supplied host pattern, ignoring: 192.168.0.3
-
- [WARNING]: Could not match supplied host pattern, ignoring: 192.168.0.2
-
-
-PLAY [192.168.0.3 192.168.0.2 42.159.95.138 42.159.4.34 192.168.0.1] ****************************************************************************************************************
-
-TASK [Gathering Facts] **************************************************************************************************************************************************************
-ok: [42.159.4.34]
-ok: [42.159.95.138]
-fatal: [192.168.0.1]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host 192.168.0.1 port 22: Connection timed out\r\n", "unreachable": true}
-
-TASK [copyfile] *********************************************************************************************************************************************************************
-ok: [42.159.4.34]
-fatal: [42.159.95.138]: FAILED! => {"changed": false, "checksum": "b20f884c68872692fca1b3b6b4343cfbc15cb17e", "msg": "Destination directory /etc/anchora/cmp/temp does not exist"}
-
-TASK [restart apache] ***************************************************************************************************************************************************************
-fatal: [42.159.4.34]: FAILED! => {"changed": false, "msg": "Could not find the requested service httpd: host"}
-	to retry, use: --limit @/etc/anchora/cmp/ansible/playbooks/playbook.retry
-
-PLAY RECAP **************************************************************************************************************************************************************************
-192.168.0.1                : ok=0    changed=0    unreachable=1    failed=0   
-42.159.4.34                : ok=2    changed=0    unreachable=0    failed=1   
-42.159.95.138              : ok=1    changed=0    unreachable=0    failed=1  
- * 
- */

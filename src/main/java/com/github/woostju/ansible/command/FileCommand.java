@@ -6,17 +6,14 @@ import org.assertj.core.util.Lists;
 
 import com.github.woostju.ansible.Module;
 
-public class FileCommand extends AdhocCommand{
+public class FileCommand extends Command{
 	
 	public FileCommand(List<String> hosts, List<String> module_args, List<String> options) {
-		super(hosts, Module.file, module_args, options);
+		super(hosts, Module.file.toString(), module_args, options);
 	}
 	
 	public FileCommand(List<String> hosts, String path, FileCommandState state, List<String> module_args, List<String> options) {
-		super(hosts, Module.file, module_args, options);
-		if (null==module_args) {
-			this.setModule_args(Lists.newArrayList());
-		}
+		this(hosts, module_args==null?Lists.newArrayList():module_args, options);
 		this.getModule_args().add("path="+path);
 		this.getModule_args().add("state="+state.toString());
 	}

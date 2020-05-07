@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.github.woostju.ansible.Module;
 
-public class PingCommand extends AdhocCommand{
+public class PingCommand extends Command{
 
 	
 	public PingCommand(List<String> hosts) {
@@ -13,6 +13,6 @@ public class PingCommand extends AdhocCommand{
 	
 	
 	public PingCommand(List<String> hosts, List<String> options) {
-		super(hosts, Module.ping, null, options);
+		super(hosts, Module.ping.toString(), null, options);
 	}
 }

@@ -2,7 +2,6 @@ package com.github.woostju.ansible;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,11 +11,14 @@ import org.assertj.core.util.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.woostju.ansible.command.AdhocCommand;
-import com.github.woostju.ansible.command.PingCommand;
+import com.github.woostju.ansible.command.Command;
 import com.github.woostju.ansible.util.SystemCommandExecutor;
+import com.github.woostju.ssh.SshClient;
 import com.github.woostju.ssh.SshClientConfig;
+import com.github.woostju.ssh.SshClientFactory;
 import com.github.woostju.ssh.SshResponse;
+import com.github.woostju.ssh.exception.SshException;
+import com.github.woostju.ssh.pool.SshClientPoolConfig;
 import com.github.woostju.ssh.pool.SshClientWrapper;
 import com.github.woostju.ssh.pool.SshClientsPool;
 
@@ -24,22 +26,14 @@ import com.github.woostju.ssh.pool.SshClientsPool;
  * 
  * @author jameswu
  * 
- * Ansible client 
- * sample:
- * AnsibleClient client = 
- * 	AnsibleClient.newInstance("192.168.0.1", 22).configAuth("root", "paass", "/").setInventoryPath("/etc/anchora/cmp/ansible/inventory");
- *
+ * 
  */
 
 public class AnsibleClient {
 	
 	private final static Logger logger = LoggerFactory.getLogger(AnsibleClient.class);
 	
-	private static SshClientsPool sshClientsPool = new SshClientsPool();
-	
-	private SshClientsPool getSshClientsPool() {
-		return sshClientsPool;
-	}
+	private SshClientsPool sshClientsPool;
 	
 	/**
 	 * ansible client to local machine
@@ -54,6 +48,15 @@ public class AnsibleClient {
 	 */
 	public AnsibleClient(SshClientConfig config){
 		this.hostSshConfig = config;
+	}
+	
+	/**
+	 * ansible client to remote machine
+	 * @param config ssh config of remote machine
+	 */
+	public AnsibleClient(SshClientConfig config, SshClientsPool sshClientsPool){
+		this.hostSshConfig = config;
+		this.sshClientsPool = sshClientsPool;
 	}
 	
 	private SshClientConfig hostSshConfig;
@@ -87,6 +90,10 @@ public class AnsibleClient {
 	public String getInventoryPath() {
 		return inventoryPath;
 	}
+	
+	public SshClientConfig getHostSshConfig() {
+		return hostSshConfig;
+	}
 
 	/**
 	 * 
@@ -98,15 +105,8 @@ public class AnsibleClient {
 	 * 
 	 * run ansible modules
 	 */
-	public Map<String, ReturnValue> execute(AdhocCommand command, int timeoutInSeconds){
-		
-		List<String> commands = new ArrayList<>();
-		commands.add(this.ansibleRootPath + command.getExecutable());
-		if(this.getInventoryPath()!=null){
-			commands.add("-i");
-			commands.add(this.getInventoryPath());
-		}
-		commands.addAll(this.generateCommand(command));
+	public Map<String, ReturnValue> execute(Command command, int timeoutInSeconds){
+		List<String> commands = command.createAnsibleCommands(this, command);
 		logger.info("execute commands "+ commands+" in "+timeoutInSeconds);
 		Exception exception = null;
 		Map<String, ReturnValue> responses = new HashMap<>();
@@ -121,8 +121,21 @@ public class AnsibleClient {
 		}else{
 			String commandStr = commands.stream().collect(Collectors.joining(" "));
 			try {
-				SshClientWrapper client = getSshClientsPool().client(this.hostSshConfig);
-				SshResponse sshResponse = client.executeCommand(commandStr, timeoutInSeconds);
+				SshResponse sshResponse;
+				if (this.sshClientsPool==null) {
+					SshClientWrapper wrapper = new SshClientWrapper(this.hostSshConfig, new SshClientPoolConfig());
+					try {
+						wrapper.connect(timeoutInSeconds).auth().startSession();
+						sshResponse = wrapper.executeCommand(commandStr, timeoutInSeconds);
+					} catch (SshException e) {
+						throw new RuntimeException("create ssh client fail");
+					}finally {
+						wrapper.disconnect();
+					}
+				}else {
+					SshClientWrapper client = this.sshClientsPool.client(this.hostSshConfig);
+					sshResponse = client.executeCommand(commandStr, timeoutInSeconds);
+				}
 				if(sshResponse.getCode()==0) {
 					// use module output parser to parse the console log
 					try{
@@ -150,31 +163,6 @@ public class AnsibleClient {
 			}
 		}
 		return responses;
-	}
-	
-	public List<String> generateCommand(AdhocCommand command) {
-		List<String> commands = new ArrayList<String>();
-		commands.add(command.getHosts().stream().collect(Collectors.joining(":")));
-		if (command.getModule() != Module.playbook) {
-			commands.add("-m "+command.getModule().toString());
-		}
-		if (null!= command.getModule_args() && command.getModule_args().size()>0) {
-			if (this.hostSshConfig!=null) {
-				commands.add("-a '"+command.getModule_args().stream().collect(Collectors.joining(" "))+"'");
-			}else {
-				commands.add("-a "+command.getModule_args().stream().collect(Collectors.joining(" ")));
-			}
-		}
-		if (null!= command.getOptions() && command.getOptions().size()>0) {
-			commands.add(command.getOptions().stream().collect(Collectors.joining(" ")));
-		}
-		return commands;
-	}
-	
-	public static void main(String[] args) {
-		SshClientConfig config = new SshClientConfig("54.223.170.242", 22, "centos", null, "/Users/jameswu/Documents/workspace/ssh-client-pool/src/test/java/id_rsa");
-		Map<String, ReturnValue> response = new AnsibleClient(config).execute(new PingCommand(Lists.newArrayList("127.0.0.1"), null), 100);
-		System.out.println(response);
 	}
 	
 }

@@ -11,20 +11,25 @@ import org.junit.Test;
 
 import com.github.woostju.ansible.AnsibleClient;
 import com.github.woostju.ansible.ReturnValue;
+import com.github.woostju.ansible.ReturnValue.Result;
 import com.github.woostju.ansible.command.CmdCommand;
 import com.github.woostju.ansible.command.CopyCommand;
 import com.github.woostju.ansible.command.FileCommand;
 import com.github.woostju.ansible.command.PingCommand;
+import com.github.woostju.ansible.command.PlaybookCommand;
 import com.github.woostju.ansible.command.ScriptCommand;
 import com.github.woostju.ansible.command.FileCommand.FileCommandState;
 import com.github.woostju.ansible.command.GitCommand;
 import com.github.woostju.ssh.SshClientConfig;
+import com.github.woostju.ssh.pool.SshClientsPool;
 
 public class TestAnsibleClient {
 	
+	static SshClientsPool pool = new SshClientsPool();
+	
 	private SshClientConfig clientConfig;
 	
-	private String host = "52.81.207.118";
+	private String host = "52.80.146.61";
 	
 	private String host_inner_ip = "172.31.31.82";
 	
@@ -35,7 +40,7 @@ public class TestAnsibleClient {
 	}
 	
 	private AnsibleClient ansibleClient() {
-		AnsibleClient client = new AnsibleClient(clientConfig);
+		AnsibleClient client = new AnsibleClient(clientConfig, pool);
 		client.setInventoryPath("/opt/anchora/cmp/ansible/inventory");
 		return client;
 	}
@@ -181,6 +186,20 @@ public class TestAnsibleClient {
 				false,
 		}, new Object[]{
 				result.get(host_inner_ip).isSuccess(),
+		});
+	}
+
+	@Test
+	public void testPlaybookSuccess() {
+		String path = this.getClass().getClassLoader().getResource("playbook-unittest-success.yaml").getPath();
+		localAnsibleClient().execute(new CopyCommand(Lists.newArrayList(clientConfig.getHost()), path, "/tmp/playbook-unittest-success.yaml", true, null, null, null), 100);
+		
+		Map<String, ReturnValue> result = ansibleClient().execute(new PlaybookCommand(Lists.newArrayList(host_inner_ip,"172.31.31.81"), "/tmp/playbook-unittest-success.yaml", null), 100);
+		assertArrayEquals(new Object[]{
+				true, Result.unmanaged
+		}, new Object[]{
+				result.get(host_inner_ip).isSuccess(),
+				result.get("172.31.31.81").getResult()
 		});
 	}
 	
