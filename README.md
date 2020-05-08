@@ -71,15 +71,15 @@ AnsibleClient connects to Ansible server with ssh, and sends an Ansible adhoc co
 
 Until this release, ansible-client supports modules below:
 
-| module name | link | module class | description |
+| module name | module class | description | official link |
 | :----:| :----: | :----: | :----: |
-| command | [official link](https://docs.ansible.com/ansible/latest/modules/command_module.html) | CmdCommand | The command will be executed on hosts |
-| copy | [official link](https://docs.ansible.com/ansible/latest/modules/copy_module.html) | CopyCommand | Copies a file from the local or remote machine to a location on the remote machine |
-| file | [official link](https://docs.ansible.com/ansible/latest/modules/file_module.html) | FileCommand | Manage files and file properties |
-| git | [official link](https://docs.ansible.com/ansible/latest/modules/git_module.html) | GitCommand | Deploy software (or files) from git checkouts |
-| ping | [official link](https://docs.ansible.com/ansible/latest/modules/ping_module.html) | PingCommand | Try to connect to host, verify a usable python and return pong on success |
-| playbook | [official link](https://docs.ansible.com/ansible/latest/user_guide/playbooks.html) | PlaybookCommand |  Run playbook with ansible-playbook executable |
-| script | [official link](https://docs.ansible.com/ansible/latest/modules/script_module.html) | ScriptCommand | Runs a local script on a remote node after transferring it |
+| command |  CmdCommand | The command will be executed on hosts | [link](https://docs.ansible.com/ansible/latest/modules/command_module.html) |
+| copy | CopyCommand | Copies a file from the local or remote machine to a location on the remote machine | [link](https://docs.ansible.com/ansible/latest/modules/copy_module.html) | 
+| file | FileCommand | Manage files and file properties | [link](https://docs.ansible.com/ansible/latest/modules/file_module.html) | 
+| git | GitCommand | Deploy software (or files) from git checkouts | [link](https://docs.ansible.com/ansible/latest/modules/git_module.html) | 
+| ping | PingCommand | Try to connect to host, verify a usable python and return pong on success |[link](https://docs.ansible.com/ansible/latest/modules/ping_module.html) | 
+| playbook | PlaybookCommand |  Run playbook with ansible-playbook executable | [link](https://docs.ansible.com/ansible/latest/user_guide/playbooks.html) |
+| script | ScriptCommand | Runs a local script on a remote node after transferring it | [link](https://docs.ansible.com/ansible/latest/modules/script_module.html) | 
 
 Since Ansible itself has dozens of modules, you can also define your custom command class to work with AnsibleClient.
   
