@@ -10,20 +10,39 @@ import com.github.woostju.ansible.AnsibleClient;
 import com.github.woostju.ansible.ReturnValue;
 import com.github.woostju.ansible.util.JsonUtil;
 
+/**
+ * All the Ansible command should extends this command
+ * @author jameswu
+ *
+ */
 public abstract class Command{
+	
 	private List<String> hosts;
-	private List<String> module_args;
+	
+	private List<String> moduleArgs;
+	
 	private String module;
+	
 	private List<String> options;
 	
 	public Command() {
 		
 	}
 	
+	/**
+	 * executable to run command
+	 * @return default return ansible
+	 */
 	public String getExecutable() {
 		return "ansible";
 	}
 	
+	/**
+	 * create Ansible command line to be sent
+	 * @param client AnsibleClient
+	 * @param command Command
+	 * @return Ansible command line
+	 */
 	public List<String> createAnsibleCommands(AnsibleClient client, Command command) {
 		List<String> commands = new ArrayList<>();
 		commands.add(client.getAnsibleRootPath() + command.getExecutable());
@@ -35,11 +54,11 @@ public abstract class Command{
 		if (command.getModule()!=null) {
 			commands.add("-m "+command.getModule().toString());
 		}
-		if (null!= command.getModule_args() && command.getModule_args().size()>0) {
+		if (null!= command.getModuleArgs() && command.getModuleArgs().size()>0) {
 			if (client.getHostSshConfig()!=null) {
-				commands.add("-a '"+command.getModule_args().stream().collect(Collectors.joining(" "))+"'");
+				commands.add("-a '"+command.getModuleArgs().stream().collect(Collectors.joining(" "))+"'");
 			}else {
-				commands.add("-a "+command.getModule_args().stream().collect(Collectors.joining(" ")));
+				commands.add("-a "+command.getModuleArgs().stream().collect(Collectors.joining(" ")));
 			}
 		}
 		if (null!= command.getOptions() && command.getOptions().size()>0) {
@@ -48,27 +67,31 @@ public abstract class Command{
 		return commands;
 	}
 	
+	/**
+	 * Parse the Ansible output
+	 * @param rawOutput the Ansible output
+	 * @return return value of output, key:ip address, value: {@link ReturnValue}
+	 */
 	public Map<String, ReturnValue> parseCommandReturnValues(List<String> rawOutput){
 		Map<String, ReturnValue> returnValues = new HashMap<>(); 
 		String currentKey = null;
 		for(String line:rawOutput){
-			// 检测输出所属ip，header中包含了ip地址、result等信息
+			// the line with ip is ResultValueHeader
 			ResultValueHeader header = ResultValueHeader.createHeader(line);
 			if(header!=null){
-				// 这是一条包含头信息的日志
+				// a ReturnValue object created for ip
 				ReturnValue resultValue = new ReturnValue();
 				resultValue.setRc(header.getRc());
 				resultValue.setResult(header.getResult());
 				returnValues.put(header.getIp(), resultValue);
 				currentKey = header.getIp();
 			}else if(currentKey!=null){
-				// 这是一条ansible针对某主机的输出
+				// the line should put into stdout
 				returnValues.get(currentKey).getStdout().add(line);
 			}
 		}
-		// all the return values are parsed, then, let command subclass to parse returnValue
+		// parse the ReturnValue.stdout to ReturnValue.value
 		for(String key:returnValues.keySet()){
-			// 处理每个ip的输出内容, 从log中抽取错误信息，日志信息
 			ReturnValue returnValue = returnValues.get(key);
 			if(returnValue.getResult() == ReturnValue.Result.unmanaged){
 				returnValue.getStdout().add("[WARNING]: Could not match supplied host pattern, ignoring:"+key);
@@ -84,10 +107,16 @@ public abstract class Command{
 		return returnValues;
 	}
 	
-	public Command(List<String> hosts, String module, List<String> module_args, List<String> options){
+	/**
+	 * @param hosts target hosts
+	 * @param module module name
+	 * @param moduleArgs arguments of module
+	 * @param options options for Ansible
+	 */
+	public Command(List<String> hosts, String module, List<String> moduleArgs, List<String> options){
 		this.hosts = hosts;
 		this.module = module;
-		this.module_args = module_args;
+		this.moduleArgs = moduleArgs;
 		this.options = options;
 	}
 
@@ -99,12 +128,12 @@ public abstract class Command{
 		this.hosts = hosts;
 	}
 
-	public List<String> getModule_args() {
-		return module_args;
+	public List<String> getModuleArgs() {
+		return moduleArgs;
 	}
 
-	public void setModule_args(List<String> module_args) {
-		this.module_args = module_args;
+	public void setModuleArgs(List<String> moduleArgs) {
+		this.moduleArgs = moduleArgs;
 	}
 
 	public String getModule() {
@@ -122,8 +151,4 @@ public abstract class Command{
 	public void setOptions(List<String> options) {
 		this.options = options;
 	}
-	
-	
-	
-	
 }

@@ -11,10 +11,22 @@ import java.util.stream.Collectors;
 import com.github.woostju.ansible.AnsibleClient;
 import com.github.woostju.ansible.ReturnValue;
 
+/**
+ * Run playbook with ansible-playbook executable
+ * <p> sample: ansible-playbook -i inventory playbook.yml
+ * <p> Get more info from <a href="https://docs.ansible.com/ansible/latest/user_guide/playbooks.html">playbook docs</a> 
+ * @author jameswu
+ *
+ */
 public class PlaybookCommand extends Command{
 
 	private String playbookPath;
 	
+	/**
+	 * @param hosts target hosts
+	 * @param playbookPath Playbook file path on ansible server
+	 * @param options options
+	 */
 	public PlaybookCommand(List<String> hosts, String playbookPath, List<String> options) {
 		super(hosts, null, 
 				null, 

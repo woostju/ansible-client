@@ -2,10 +2,19 @@ package com.github.woostju.ansible;
 
 /**
  * 
+ * ansible module type
+ * 
  * @author jameswu
- *
- *	ansible module类型
  */
 public enum Module {
-	script, command, ping, copy, playbook, git, ansible_inventory, file, get_url, setup
+	script, 
+	command, 
+	ping, 
+	copy, 
+	playbook, 
+	git, 
+	ansible_inventory, 
+	file, 
+	get_url, 
+	setup
 }

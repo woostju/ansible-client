@@ -6,23 +6,36 @@ import org.assertj.core.util.Lists;
 
 import com.github.woostju.ansible.Module;
 
+/**
+ * Deploy software (or files) from git checkouts
+ * <p>Get more information from <a href="https://docs.ansible.com/ansible/latest/modules/git_module.html">git module</a>.
+ * @author jameswu
+ *
+ */
 public class GitCommand extends Command{
 	
 	public GitCommand(List<String> hosts,  List<String> module_args, List<String> options) {
 		super(hosts, Module.git.toString(), module_args, options);
 	}
 	
-	public GitCommand(List<String> hosts, String gitRepo, String destDirectory, String gitSshKeyFilePath, List<String> module_args, List<String> options) {
-		this(hosts, module_args==null?Lists.newArrayList():module_args, options);
-		this.getModule_args().add("force=yes");
+	/**
+	 * 
+	 * @param hosts target hosts
+	 * @param gitRepo git, SSH, or HTTP(S) protocol address of the git repository.
+	 * @param destDirectory The path of where the repository should be checked out. 
+	 * @param gitSshKeyFilePath Key file of ssh repository
+	 */
+	public GitCommand(List<String> hosts, String gitRepo, String destDirectory, String gitSshKeyFilePath) {
+		this(hosts, Lists.newArrayList(), null);
+		this.getModuleArgs().add("force=yes");
 		if (gitSshKeyFilePath!=null) {
-			this.getModule_args().add("key_file="+gitSshKeyFilePath);
+			this.getModuleArgs().add("key_file="+gitSshKeyFilePath);
 		}
 		if(gitRepo!=null) {
-			this.getModule_args().add("repo="+gitRepo);
+			this.getModuleArgs().add("repo="+gitRepo);
 		}
 		if (destDirectory!=null) {
-			this.getModule_args().add("dest="+destDirectory);
+			this.getModuleArgs().add("dest="+destDirectory);
 		}
 	}
 }

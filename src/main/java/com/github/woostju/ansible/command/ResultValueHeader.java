@@ -7,23 +7,21 @@ import com.github.woostju.ansible.ReturnValue;
 
 /**
  * 
+ *extract header info for each host, the info contains ip，result，rc
  * @author jameswu
- *
- *	解析ansible为每台目标主机输出头中包含的ip，result，rc信息
- *	目前有两种类型的header
- *	[type1] 42.159.4.34 | CHANGED | rc=0 >>
- *	[type2] 42.11.11.11 | UNREACHABLE! => {
  */
 public class ResultValueHeader {
 	// 42.159.4.34 | CHANGED | rc=0 >>
 	static Pattern head_type1_pattern = Pattern.compile("^\\d+\\.\\d+\\.\\d+\\.\\d+( \\| ).*( \\| ).*>>$");
 	
 	static Pattern head_type1_rc_pattern = Pattern.compile("rc=\\d");
+	
 	static Pattern head_type1_result_pattern = Pattern.compile("( \\| ).*( \\| )");
 	// 42.11.11.11 | UNREACHABLE! => {
 	static Pattern head_type2_pattern = Pattern.compile("^\\d+\\.\\d+\\.\\d+\\.\\d+( \\| ).+=>.*\\{$");
-	static Pattern head_type2_result_pattern = Pattern.compile("( \\| ).*( =>)");
 	
+	static Pattern head_type2_result_pattern = Pattern.compile("( \\| ).*( =>)");
+	// the host is not in inventory
 	static Pattern head_inventory_no_host_pattern = Pattern.compile(".*(Could not match supplied host pattern).*");
 	
 	static Pattern head_ip_pattern = Pattern.compile("\\d+\\.\\d+\\.\\d+\\.\\d+");
@@ -47,14 +45,16 @@ public class ResultValueHeader {
 	}
 	
 	enum HeaderType{
-		type1, type2, type_not_in_inventory
+		type1, 
+		type2, 
+		type_not_in_inventory
 	}
 
 	/**
 	 * 
-	 * @param line
-	 * @return 
-	 * 返回null如果line不是符合pattern的header
+	 * @param headerLine header line
+	 * @return a {@link ResultValueHeader}, null if line is not a header
+	 * 
 	 */
 	public static ResultValueHeader createHeader(String headerLine){
 		ResultValueHeader header = new ResultValueHeader();
@@ -131,24 +131,6 @@ public class ResultValueHeader {
 			return ReturnValue.Result.failed;
 		}
 		return ReturnValue.Result.unknown;
-	}
-	
-	public static void main(String[] args) {
-//		AnsibleOutputHeader head = AnsibleOutputHeader.createHeader("42.159.4.34 | CHANGED | rc=0 >>");
-//		System.out.println(head);
-//		
-//		
-//		AnsibleOutputHeader head2 = AnsibleOutputHeader.createHeader("42.11.11.11 | UNREACHABLE! => {");
-//		System.out.println(head2);
-//		
-//		AnsibleOutputHeader head3 = AnsibleOutputHeader.createHeader("42.11.1a.11| UNREACHABLE! => {");
-//		System.out.println(head3);
-//		
-//		AnsibleOutputHeader head4 = AnsibleOutputHeader.createHeader("42.159.11.62 | FAILED! => {");
-//		System.out.println(head4);
-		
-		ResultValueHeader head5 = ResultValueHeader.createHeader("[WARNING]: Could not match supplied host pattern, ignoring: 192.168.1.1");
-		System.out.println(head5);
 	}
 	
 	@Override

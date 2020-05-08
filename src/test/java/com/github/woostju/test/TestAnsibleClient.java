@@ -124,30 +124,30 @@ public class TestAnsibleClient {
 	
 	@Test
 	public void testFileAndCopySuccess() {
-		Map<String, ReturnValue> result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/a", FileCommandState.touch, null, null), 100);
+		Map<String, ReturnValue> result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/a", FileCommandState.touch), 100);
 		
-		result = ansibleClient().execute(new CopyCommand(Lists.newArrayList(host_inner_ip), "/tmp/a", "/tmp/b", true, null, null, null), 100);
+		result = ansibleClient().execute(new CopyCommand(Lists.newArrayList(host_inner_ip), "/tmp/a", "/tmp/b", true, null, null), 100);
 		assertArrayEquals(new Object[]{
 				true,
 		}, new Object[]{
 				result.get(host_inner_ip).isSuccess(),
 		});
 		
-		result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/a", FileCommandState.absent, null, null), 100);
-		result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/b", FileCommandState.absent, null, null), 100);
+		result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/a", FileCommandState.absent), 100);
+		result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/b", FileCommandState.absent), 100);
 	}
 	
 	//
 	@Test
 	public void testGitSuccess() {
-		Map<String, ReturnValue> result = ansibleClient().execute(new GitCommand(Lists.newArrayList(host_inner_ip), "https://github.com/woostju/ssh-client-pool.git", "/tmp/ssh-client-pool", null, null, null), 1000);
+		Map<String, ReturnValue> result = ansibleClient().execute(new GitCommand(Lists.newArrayList(host_inner_ip), "https://github.com/woostju/ssh-client-pool.git", "/tmp/ssh-client-pool", null), 1000);
 		assertArrayEquals(new Object[]{
 				true,
 		}, new Object[]{
 				result.get(host_inner_ip).isSuccess(),
 		});
 		
-		result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/ssh-client-pool/LICENSE", FileCommandState.file, null, null), 100);
+		result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/ssh-client-pool/LICENSE", FileCommandState.file), 100);
 		assertArrayEquals(new Object[]{
 				true,
 		}, new Object[]{
@@ -157,7 +157,7 @@ public class TestAnsibleClient {
 	
 	@Test
 	public void testGitFailed() {
-		Map<String, ReturnValue> result = ansibleClient().execute(new GitCommand(Lists.newArrayList(host_inner_ip), "git@github.com:woostju/ssh-client-pool.git", "/tmp/ssh-client-pool", null, null, null), 1000);
+		Map<String, ReturnValue> result = ansibleClient().execute(new GitCommand(Lists.newArrayList(host_inner_ip), "git@github.com:woostju/ssh-client-pool.git", "/tmp/ssh-client-pool", null), 1000);
 		assertArrayEquals(new Object[]{
 				false,
 		}, new Object[]{
@@ -168,20 +168,20 @@ public class TestAnsibleClient {
 	@Test
 	public void testScriptSuccess() {
 		String path = this.getClass().getClassLoader().getResource("script.sh").getPath();
-		localAnsibleClient().execute(new CopyCommand(Lists.newArrayList(clientConfig.getHost()), path, "/tmp/script.sh", true, null, null, null), 100);
+		localAnsibleClient().execute(new CopyCommand(Lists.newArrayList(clientConfig.getHost()), path, "/tmp/script.sh", true, null, null), 100);
 		
-		Map<String, ReturnValue> result = ansibleClient().execute(new ScriptCommand(Lists.newArrayList(host_inner_ip), "/tmp/script.sh", "/bin/sh", null), 100);
+		Map<String, ReturnValue> result = ansibleClient().execute(new ScriptCommand(Lists.newArrayList(host_inner_ip), "/tmp/script.sh", "/bin/sh"), 100);
 		assertArrayEquals(new Object[]{
 				true,
 		}, new Object[]{
 				result.get(host_inner_ip).isSuccess(),
 		});
-		result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/script.sh", FileCommandState.absent, null, null), 100);
+		result = ansibleClient().execute(new FileCommand(Lists.newArrayList(host_inner_ip), "/tmp/script.sh", FileCommandState.absent), 100);
 	}
 	
 	@Test
 	public void testScriptFailed() {
-		Map<String, ReturnValue> result = ansibleClient().execute(new ScriptCommand(Lists.newArrayList(host_inner_ip), "/tmp/script2.sh", "/bin/sh", null), 100);
+		Map<String, ReturnValue> result = ansibleClient().execute(new ScriptCommand(Lists.newArrayList(host_inner_ip), "/tmp/script2.sh", "/bin/sh"), 100);
 		assertArrayEquals(new Object[]{
 				false,
 		}, new Object[]{
@@ -192,7 +192,7 @@ public class TestAnsibleClient {
 	@Test
 	public void testPlaybookSuccess() {
 		String path = this.getClass().getClassLoader().getResource("playbook-unittest-success.yaml").getPath();
-		localAnsibleClient().execute(new CopyCommand(Lists.newArrayList(clientConfig.getHost()), path, "/tmp/playbook-unittest-success.yaml", true, null, null, null), 100);
+		localAnsibleClient().execute(new CopyCommand(Lists.newArrayList(clientConfig.getHost()), path, "/tmp/playbook-unittest-success.yaml", true, null, null), 100);
 		
 		Map<String, ReturnValue> result = ansibleClient().execute(new PlaybookCommand(Lists.newArrayList(host_inner_ip,"172.31.31.81"), "/tmp/playbook-unittest-success.yaml", null), 100);
 		assertArrayEquals(new Object[]{

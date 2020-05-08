@@ -5,7 +5,7 @@
 	<groupId>com.github.woostju</groupId>
 	<artifactId>ansible-client</artifactId>
 	<packaging>jar</packaging>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.9.0-RELEASE</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<url>https://github.com/woostju/ansible-client</url>
 	<description>ansible client with ssh</description>
@@ -29,7 +29,6 @@
 		<connection>scm:git@github.com:woostju/ansible-client.git</connection>
 		<developerConnection>scm:git@github.com:woostju/ansible-client.git</developerConnection>
 		<url>https://github.com/woostju/ansible-client.git</url>
-		<tag>v1.0.0-RELEASE</tag>
 	</scm>
 
 
@@ -127,7 +126,7 @@
 			<resource>
 				<directory>src/main/resources</directory>
 				<includes>
-					<include>**/*</include>
+					<include>**/*.properties</include>
 				</includes>
 				<filtering>false</filtering>
 			</resource>

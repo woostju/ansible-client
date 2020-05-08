@@ -1,94 +1,81 @@
-# ssh-client-pool
-a java implementation of ssh clients object pool with [sshj](https://github.com/hierynomus/sshj), [apache common pool2](https://github.com/apache/commons-pool), [expectIt](https://github.com/Alexey1Gavrilov/ExpectIt)
-
-
+# ansible-client
+A java implemented client connect to Ansible servers through ssh, and run Ansible command.
 
 ## usage
 
-ssh-client-pool is available from **Maven Central**
+ansible-client is available from **Maven Central**
 
 ```xml
 <dependency>
   <groupId>com.github.woostju</groupId>
-  <artifactId>ssh-client-pool</artifactId>
+  <artifactId>ansible-client</artifactId>
   <version>1.0.0-RELEASE</version>
 </dependency>
 ```
 
 ### Who is this for?
 
-Anyone who wants to connect server instances through SSH, send commands to server and consume the output continuously. 
+Anyone who want to execute commands on your Ansible server in java code, instead of logging into server and execute manually.
 
-Anyone who wants to cache the connected clients in an object pool, to reuse the client.
-
+With this, you can build an automation tool yourself working with Ansible in java.
 
 ### How do I use this?
 
-Register it in your SpringBoot configuration class:
+Use it in your class:
 
 ```java
-@Bean
-public SshClientsPool sshclientpool() {
-	return new SshClientsPool();
+
+import com.github.woostju.ssh.SshClientConfig;
+import com.github.woostju.ansible.AnsibleClient;
+import com.github.woostju.ansible.ReturnValue;
+import com.github.woostju.ansible.ReturnValue.Result;
+
+//---------------------------------------
+
+public void execute() {
+	AnsibleClient client = new AnsibleClient(new SshClientConfig("hostIp", "sshPort", "username", "password", null));
+	Map<String, ReturnValue> result =client.execute(new PingCommand(Lists.newArrayList(host_inner_ip)), 1000);
 }
 ```
 
-Then in your service class, use it as:
+It is recommended to use AnsibleClient with [SshClientPool](https://github.com/woostju/ssh-client-pool), so that ansibleClient borrows sshClient from the pool to execute command, to avoid create ssh connection each time:
 
 ```java
 import com.github.woostju.ssh.SshClientConfig;
-import com.github.woostju.ssh.SshResponse;
-import com.github.woostju.ssh.config.SshClientPoolConfig;
-import com.github.woostju.ssh.pool.SshClientWrapper;
+import com.github.woostju.ansible.AnsibleClient;
+import com.github.woostju.ansible.ReturnValue;
+import com.github.woostju.ansible.ReturnValue.Result;
 import com.github.woostju.ssh.pool.SshClientsPool;
 
 //---------------------------------------
 
+// inject the auto-configured one
 @Autowired
 SshClientsPool pool;
 
 //---------------------------------------
-public void echo(){
-	SshClientConfig clientConfig = new SshClientConfig("hostip", 22, "username", "password", null);
-	SshClientWrapper client = pool.client(clientConfig);
-	SshResponse response = client.executeCommand("echo 'hi'", 100);
-	return response;
+public void execute() {
+	AnsibleClient client = new AnsibleClient(new SshClientConfig("hostIp", "sshPort", "username", "password", null), pool);
+	Map<String, ReturnValue> result =client.execute(new PingCommand(Lists.newArrayList(host_inner_ip)), 1000);
 }
 
 ```
 
-### Can I configure the pool?
-You can create SshClientsPool with config:
-
-
- ```java
-@Bean
-public SshClientsPool sshclientpool() {
-	SshClientPoolConfig poolConfig = SshClientPoolConfig();
-	poolConfig.setMaxTotalPerKey(maxTotal);
-	poolConfig.setMaxIdlePerKey(maxIdle); 
-	poolConfig.setBlockWhenExhausted(true);
-	poolConfig.setMaxWaitMillis(1000L * maxWaitMillis); 
-		
-	poolConfig.setMinEvictableIdleTimeMillis(1000L * idleTime); 
-	poolConfig.setTimeBetweenEvictionRunsMillis(1000L * idleTime);
-	poolConfig.setTestOnBorrow(true); 
-	poolConfig.setTestOnReturn(true); 
-	poolConfig.setTestWhileIdle(true);
-	poolConfig.setJmxEnabled(false); //disbale jmx
-	
-	poolConfig.setSshClientImplClass(YourSshClientImpl.class) // if you do not want to use sshj, pass this class
-	return new SshClientsPool(poolConfig);
-}
-```
-
-SshClientPoolConfig is a subclass of GenericKeyedObjectPool in Apacha Common Pool2, learn more from [apache common pool2](https://github.com/apache/commons-pool) to configure the pool.
+To get more usage, please refer to the unit test code and java docs.
 
 ### How does it work?
 
-When you request a client from pool, it will pull an idle one, if there is no idle client, a created one return.
-After you execute a command, it will return the client to pool as an idle one.
-If you close the client explicitly, the client will be destroyed and remove from pool.
+AnsibleClient connects to Ansible server with ssh, and sends an Ansible adhoc command to server, and parses the output into ReturnValue.
+
+### How many module does ansible-client support?
+
+Until this release, ansible-client support module below:
+
+
+| 左对齐 | 右对齐 | 居中对齐 |
+| :-----| ----: | :----: |
+| 单元格 | 单元格 | 单元格 |
+| 单元格 | 单元格 | 单元格 |
 
 ## License
 
@@ -97,6 +84,4 @@ This code is under the [Apache Licence v2](https://www.apache.org/licenses/LICEN
 
 ## Additional Resources
 
-* [hierynomus/sshj](https://github.com/hierynomus/sshj)  ssh, scp and sftp for java
-* [apache common pool2](https://github.com/apache/commons-pool)  The Apache Commons Object Pooling Library.
-* [Alexey1Gavrilov/expectIt](https://github.com/Alexey1Gavrilov/ExpectIt)  ExpectIt - is yet another pure Java 1.6+ implementation of the Expect tool. It is designed to be simple, easy to use and extensible. Written from scratch.
+* [SshClientPool](https://github.com/woostju/ssh-client-pool) a java implementation of ssh clients object pool with sshj, apache common pool2, expectIt

@@ -13,9 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.woostju.ansible.command.Command;
 import com.github.woostju.ansible.util.SystemCommandExecutor;
-import com.github.woostju.ssh.SshClient;
 import com.github.woostju.ssh.SshClientConfig;
-import com.github.woostju.ssh.SshClientFactory;
 import com.github.woostju.ssh.SshResponse;
 import com.github.woostju.ssh.exception.SshException;
 import com.github.woostju.ssh.pool.SshClientPoolConfig;
@@ -24,6 +22,7 @@ import com.github.woostju.ssh.pool.SshClientsPool;
 
 /**
  * 
+ * ansible client, execute ansible adhoc command on remote ansible server, or execute on local server
  * @author jameswu
  * 
  * 
@@ -36,14 +35,14 @@ public class AnsibleClient {
 	private SshClientsPool sshClientsPool;
 	
 	/**
-	 * ansible client to local machine
+	 * Ansible client to local server
 	 */
 	public AnsibleClient(){
 		
 	}
 	
 	/**
-	 * ansible client to remote machine
+	 * Ansible client for remote server
 	 * @param config ssh config of remote machine
 	 */
 	public AnsibleClient(SshClientConfig config){
@@ -51,8 +50,9 @@ public class AnsibleClient {
 	}
 	
 	/**
-	 * ansible client to remote machine
+	 * Ansible client for remote server
 	 * @param config ssh config of remote machine
+	 * @param sshClientsPool the pool used to ssh client to remote server
 	 */
 	public AnsibleClient(SshClientConfig config, SshClientsPool sshClientsPool){
 		this.hostSshConfig = config;
@@ -67,43 +67,54 @@ public class AnsibleClient {
 	
 	
 	/**
-	 * set custom inventory for ansible
-	 * @param inventoryPath
-	 * @return
+	 * set custom Ansible inventory, default is /etc/ansible/hosts
+	 * @param inventoryPath custom Ansible inventory
+	 * @return AnsibleClient
 	 */
 	public AnsibleClient setInventoryPath(String inventoryPath){
 		this.inventoryPath = inventoryPath;
 		return this;
 	}
 	
-	
+	/**
+	 * set Ansible executables root folder, the folder should contain executable ansible | ansible-playbook | ansible-inventory .etc, default is /usr/bin/
+	 * @param ansibleRootPath the root folder of Ansible executables
+	 * @return AnsibleClient
+	 */
 	public AnsibleClient setAnsibleRootPath(String ansibleRootPath) {
 		this.ansibleRootPath = ansibleRootPath;
 		return this;
 	}
 	
-	
+	/**
+	 * 
+	 * @return Ansible executables root folder
+	 */
 	public String getAnsibleRootPath() {
 		return ansibleRootPath;
 	}
 
+	/**
+	 * 
+	 * @return Ansible inventory path
+	 */ 
 	public String getInventoryPath() {
 		return inventoryPath;
 	}
 	
+	/**
+	 * 
+	 * @return host ssh config of ansible server
+	 */
 	public SshClientConfig getHostSshConfig() {
 		return hostSshConfig;
 	}
 
 	/**
-	 * 
-	 * @param ips
-	 * @param timeoutInSeconds
-	 * @param module
-	 * @param a_params
-	 * @return
-	 * 
-	 * run ansible modules
+	 * execute Ansible command
+	 * @param command the command to be executed
+	 * @param timeoutInSeconds timeout in seconds
+	 * @return return value of executed command, key:ip address, value: {@link ReturnValue}
 	 */
 	public Map<String, ReturnValue> execute(Command command, int timeoutInSeconds){
 		List<String> commands = command.createAnsibleCommands(this, command);
@@ -111,18 +122,20 @@ public class AnsibleClient {
 		Exception exception = null;
 		Map<String, ReturnValue> responses = new HashMap<>();
 		if (this.hostSshConfig==null) {
+			// execute command locally
 			try {
 				List<String> stdout = SystemCommandExecutor.newExecutor().executeCommand(commands, timeoutInSeconds);
 				responses = command.parseCommandReturnValues(stdout);
 			} catch (Exception e) {
 				exception = e;
 			}
-			
 		}else{
+			// execute command remotely
 			String commandStr = commands.stream().collect(Collectors.joining(" "));
 			try {
 				SshResponse sshResponse;
 				if (this.sshClientsPool==null) {
+					// create ssh client directly
 					SshClientWrapper wrapper = new SshClientWrapper(this.hostSshConfig, new SshClientPoolConfig());
 					try {
 						wrapper.connect(timeoutInSeconds).auth().startSession();
@@ -133,11 +146,11 @@ public class AnsibleClient {
 						wrapper.disconnect();
 					}
 				}else {
+					// borrow ssh client from pool
 					SshClientWrapper client = this.sshClientsPool.client(this.hostSshConfig);
 					sshResponse = client.executeCommand(commandStr, timeoutInSeconds);
 				}
 				if(sshResponse.getCode()==0) {
-					// use module output parser to parse the console log
 					try{
 						responses = command.parseCommandReturnValues(sshResponse.getStdout());
 					}catch(Exception e){
