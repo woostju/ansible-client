@@ -67,16 +67,51 @@ To get more usage, please refer to the unit test code and java docs.
 
 AnsibleClient connects to Ansible server with ssh, and sends an Ansible adhoc command to server, and parses the output into ReturnValue.
 
-### How many module does ansible-client support?
+### How many Ansible module does ansible-client support?
 
-Until this release, ansible-client support module below:
+Until this release, ansible-client supports modules below:
 
+| module name | link | module class | description |
+| :----:| :----: | :----: | :----: |
+| command | [official link](https://docs.ansible.com/ansible/latest/modules/command_module.html) | CmdCommand | The command will be executed on hosts |
+| copy | [official link](https://docs.ansible.com/ansible/latest/modules/copy_module.html) | CopyCommand | Copies a file from the local or remote machine to a location on the remote machine |
+| file | [official link](https://docs.ansible.com/ansible/latest/modules/file_module.html) | FileCommand | Manage files and file properties |
+| git | [official link](https://docs.ansible.com/ansible/latest/modules/git_module.html) | GitCommand | Deploy software (or files) from git checkouts |
+| ping | [official link](https://docs.ansible.com/ansible/latest/modules/ping_module.html) | PingCommand | Try to connect to host, verify a usable python and return pong on success |
+| playbook | [official link](https://docs.ansible.com/ansible/latest/user_guide/playbooks.html) | PlaybookCommand |  Run playbook with ansible-playbook executable |
+| script | [official link](https://docs.ansible.com/ansible/latest/modules/script_module.html) | ScriptCommand | Runs a local script on a remote node after transferring it |
 
-| 左对齐 | 右对齐 | 居中对齐 |
-| :-----| ----: | :----: |
-| 单元格 | 单元格 | 单元格 |
-| 单元格 | 单元格 | 单元格 |
+Since Ansible itself has dozens of modules, you can also define your custom command class to work with AnsibleClient.
+  
+```java
+import java.util.List;
 
+import com.github.woostju.ansible.Module;
+
+/**
+* Add or remove MSSQL databases from a remote host.
+*/
+public class Mssql_dbCommand extends Command{
+
+	/**
+	 * @param hosts target hosts
+	 */
+	public Mssql_dbCommand(List<String> hosts, String login_host, String login_password, int login_port, String login_user, String name, String target, String state) {
+		this(hosts, Lists.newArrayList("login_host="+login_host,
+		"login_password="+login_password,
+		"login_port="+login_port,
+		"login_user="+login_user,
+		"name="+name,
+		"target="+target,
+		"state="+state), null);
+	}
+	
+	public Mssql_dbCommand(List<String> hosts, List<String> moduleArgs, List<String> options) {
+		super(hosts, Module.ping.toString(), moduleArgs, options);
+	}
+}
+
+```
 ## License
 
 This code is under the [Apache Licence v2](https://www.apache.org/licenses/LICENSE-2.0).
