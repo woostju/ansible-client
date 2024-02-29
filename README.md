@@ -7,9 +7,9 @@ ansible-client is available from **Maven Central**
 
 ```xml
 <dependency>
-  <groupId>com.github.woostju</groupId>
+  <groupId>com.github.lishicao</groupId>
   <artifactId>ansible-client</artifactId>
-  <version>1.0.0-RELEASE</version>
+  <version>1.0.1-RELEASE</version>
 </dependency>
 ```
 

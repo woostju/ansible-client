@@ -1,14 +1,16 @@
 package com.github.woostju.ansible.util;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import org.assertj.core.util.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,22 +25,41 @@ import net.schmizz.sshj.common.IOUtils;
 public class SystemCommandExecutor {
 	
 	private final static Logger logger = LoggerFactory.getLogger(SystemCommandExecutor.class);
-	
-	boolean stopped = false;
-	
+
+	private final ExecutorService executorService;
+
 	private SystemCommandExecutor(){
-		
+		this.executorService = Executors.newFixedThreadPool(2);
 	}
 	
 	public static SystemCommandExecutor newExecutor(){
 		return new SystemCommandExecutor();
 	}
+
+	public List<String> consumeStream(InputStream inputStream) {
+		List<String> output = new ArrayList<>();
+		executorService.submit(()->{
+			BufferedReader reader = null;
+			try {
+				reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+				String outputLine;
+				while((outputLine = reader.readLine())!=null){
+					output.add(outputLine);
+					logger.debug(outputLine);
+				}
+				reader.close();
+			} catch (Exception e) {
+				logger.error("Consume Stream Error", e);
+			} finally {
+				IOUtils.closeQuietly(reader);
+			}
+		});
+		return output;
+	}
 	
 	public List<String> executeCommand(List<String> command, int timeout) throws IOException {
 		InputStream inputStream  = null;
 		InputStream errorStream = null;
-		BufferedReader reader = null;
-		BufferedReader error_reader = null;
 		Process process = null;
 		List<String> stdout = new ArrayList<String>();
 		try {
@@ -53,26 +74,19 @@ public class SystemCommandExecutor {
 			// http://java.sun.com/j2se/1.5.0/docs/guide/misc/threadPrimitiveDeprecation.html
 			inputStream = process.getInputStream();
 			errorStream = process.getErrorStream();
-			reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
-        	error_reader = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
-            String outputLine;
-			while(!stopped && (outputLine = error_reader.readLine())!=null){
-            	stdout.add(outputLine);
-            	logger.debug(outputLine);
-            }
-            while(!stopped && (outputLine = reader.readLine())!=null){
-            	stdout.add(outputLine);
-            	logger.debug(outputLine);
-            }
+			List<String> stdOut = consumeStream(inputStream);
+			List<String> errorOut = consumeStream(errorStream);
+
+			process.waitFor();
+			stdout.addAll(errorOut);
+			stdout.addAll(stdOut);
+			return stdout;
 		}catch(Exception e) {
 			logger.error("error execute system command", e);
 		}
 		finally {
-			stopped=true;
 			IOUtils.closeQuietly(inputStream);
 			IOUtils.closeQuietly(errorStream);
-			IOUtils.closeQuietly(reader);
-			IOUtils.closeQuietly(error_reader);
 			if(process!=null) {
 				try {
 					process.destroyForcibly();
