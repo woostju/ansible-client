@@ -2,12 +2,12 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.github.woostju</groupId>
+	<groupId>com.github.lishicao</groupId>
 	<artifactId>ansible-client</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.0-RELEASE</version>
+	<version>1.0.1-RELEASE</version>
 	<name>${project.groupId}:${project.artifactId}</name>
-	<url>https://github.com/woostju/ansible-client</url>
+	<url>https://github.com/lishicao/ansible-client</url>
 	<description>ansible client with ssh</description>
 
 	<licenses>
@@ -20,15 +20,15 @@
 
 	<developers>
 		<developer>
-			<name>James WU</name>
-			<email>woostju@163.com</email>
+			<name>Shicao Li</name>
+			<email>shicao.li@gmail.com</email>
 		</developer>
 	</developers>
 
 	<scm>
-		<connection>scm:git@github.com:woostju/ansible-client.git</connection>
-		<developerConnection>scm:git@github.com:woostju/ansible-client.git</developerConnection>
-		<url>https://github.com/woostju/ansible-client.git</url>
+		<connection>scm:git@github.com:lishicao/ansible-client.git</connection>
+		<developerConnection>scm:git@github.com:lishicao/ansible-client.git</developerConnection>
+		<url>https://github.com/lishicao/ansible-client.git</url>
 	</scm>
 
 
